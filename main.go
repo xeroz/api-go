@@ -87,6 +87,33 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func updateTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskId, err := strconv.Atoi(vars["id"])
+	var updatedTask task
+
+	if err != nil {
+		fmt.Fprintf(w, "Invalid ID")
+		return
+	}
+
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprint(w, "Please Enter Valid Data")
+	}
+	json.Unmarshal(reqBody, &updatedTask)
+
+	for index, task := range tasks {
+		if task.Id == taskId {
+			tasks = append(tasks[:index], tasks[index + 1:]...)
+			updatedTask.Id = taskId
+			tasks = append(tasks, updatedTask)
+			fmt.Fprintf(w,"The task with Id %v has been updated succesfully", taskId)
+		}
+	}
+
+}
+
 func main()  {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", indexRoute)
@@ -94,5 +121,6 @@ func main()  {
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/tasks/{id}", getTask).Methods("GET")
 	router.HandleFunc("/tasks/{id}", deleteTask).Methods("DELETE")
+	router.HandleFunc("/tasks/{id}", deleteTask).Methods("UPDATE")
 	log.Fatal(http.ListenAndServe(":3400", router))
 }

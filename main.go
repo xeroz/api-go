@@ -49,7 +49,6 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(task)
 		}
 	}
-
 }
 
 func createTask(w http.ResponseWriter, r *http.Request){
@@ -70,11 +69,30 @@ func createTask(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(newTask)
 }
 
+func deleteTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskId, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		fmt.Fprintf(w, "Invalid ID")
+		return
+	}
+
+	for index, task := range tasks {
+		if task.Id == taskId {
+			tasks := append(tasks[:index], tasks[index + 1:]...)
+			fmt.Println(tasks)
+			fmt.Fprintf(w,"The task with Id %v has been  remove succesfully", taskId)
+		}
+	}
+}
+
 func main()  {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", indexRoute)
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
 	router.HandleFunc("/tasks/{id}", getTask).Methods("GET")
+	router.HandleFunc("/tasks/{id}", deleteTask).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":3400", router))
 }

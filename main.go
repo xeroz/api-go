@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type task struct {
@@ -34,6 +35,23 @@ func getTasks(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(tasks)
 }
 
+func getTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskId, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		fmt.Fprintf(w, "Invalid ID")
+		return
+	}
+
+	for _, task := range tasks {
+		if task.Id == taskId {
+			json.NewEncoder(w).Encode(task)
+		}
+	}
+
+}
+
 func createTask(w http.ResponseWriter, r *http.Request){
 	var newTask task
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -57,5 +75,6 @@ func main()  {
 	router.HandleFunc("/", indexRoute)
 	router.HandleFunc("/tasks", getTasks).Methods("GET")
 	router.HandleFunc("/tasks", createTask).Methods("POST")
+	router.HandleFunc("/tasks/{id}", getTask).Methods("GET")
 	log.Fatal(http.ListenAndServe(":3400", router))
 }
